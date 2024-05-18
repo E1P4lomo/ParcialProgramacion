@@ -8,6 +8,6 @@ import javax.swing.SwingUtilities;
     public static void main(String[] args) {
         Login log1 = new Login();
         log1.setVisible(true);
-    
+        System.out.println("");
     }
 }
