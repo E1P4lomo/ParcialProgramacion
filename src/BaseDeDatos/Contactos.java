@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package BaseDeDatos;
 
 import java.awt.BorderLayout;
@@ -13,7 +8,7 @@ import java.awt.event.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.table.DefaultTableModel;
-
+import org.mindrot.jbcrypt.BCrypt;
 public class Contactos extends JFrame {
 
     private conexion conex;
@@ -41,13 +36,13 @@ public class Contactos extends JFrame {
         JButton agregar = new JButton("Agregar");
         JButton actualizar = new JButton("Actualizar");
         JButton eliminar = new JButton("Eliminar");
-           JButton opcionesAdmin = new JButton("Opciones de Administrador");
+        JButton opcionesAdmin = new JButton("Opciones de Administrador");
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.add(agregar);
         buttonPanel.add(actualizar);
         buttonPanel.add(eliminar);
-         buttonPanel.add(opcionesAdmin);
+        buttonPanel.add(opcionesAdmin);
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -97,6 +92,14 @@ public class Contactos extends JFrame {
                 }
             }
         });
+        // Dentro del método initComponents de la clase Contactos
+        opcionesAdmin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                OpcionesAdministrador opcionesAdmin = new OpcionesAdministrador(usuarioId);
+                opcionesAdmin.setVisible(true);
+            }
+        });
     }
 
     private void cargarContactos(JTable tablaContactos) {
@@ -120,113 +123,112 @@ public class Contactos extends JFrame {
         }
     }
 
-   private void agregarContacto() {
-    JTextField dniField = new JTextField(10);
-    JTextField nombreField = new JTextField(10);
-    JTextField apellidoField = new JTextField(10);
-    JTextField correoField = new JTextField(10);
-    JTextField direccionField = new JTextField(10);
-    JTextField localidadField = new JTextField(10);
+    private void agregarContacto() {
+        JTextField dniField = new JTextField(10);
+        JTextField nombreField = new JTextField(10);
+        JTextField apellidoField = new JTextField(10);
+        JTextField correoField = new JTextField(10);
+        JTextField direccionField = new JTextField(10);
+        JTextField localidadField = new JTextField(10);
 
-    JPanel panel = new JPanel(new GridLayout(0, 2));
-    panel.add(new JLabel("DNI:"));
-    panel.add(dniField);
-    panel.add(new JLabel("Nombre:"));
-    panel.add(nombreField);
-    panel.add(new JLabel("Apellido:"));
-    panel.add(apellidoField);
-    panel.add(new JLabel("Correo Electrónico:"));
-    panel.add(correoField);
-    panel.add(new JLabel("Dirección:"));
-    panel.add(direccionField);
-    panel.add(new JLabel("Localidad:"));
-    panel.add(localidadField);
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        panel.add(new JLabel("DNI:"));
+        panel.add(dniField);
+        panel.add(new JLabel("Nombre:"));
+        panel.add(nombreField);
+        panel.add(new JLabel("Apellido:"));
+        panel.add(apellidoField);
+        panel.add(new JLabel("Correo Electrónico:"));
+        panel.add(correoField);
+        panel.add(new JLabel("Dirección:"));
+        panel.add(direccionField);
+        panel.add(new JLabel("Localidad:"));
+        panel.add(localidadField);
 
-    int result = JOptionPane.showConfirmDialog(null, panel, "Agregar Contacto", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-    if (result == JOptionPane.OK_OPTION) {
-        String dni = dniField.getText();
-        String nombre = nombreField.getText();
-        String apellido = apellidoField.getText();
-        String correo = correoField.getText();
-        String direccion = direccionField.getText();
-        String localidad = localidadField.getText();
+        int result = JOptionPane.showConfirmDialog(null, panel, "Agregar Contacto", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            String dni = dniField.getText();
+            String nombre = nombreField.getText();
+            String apellido = apellidoField.getText();
+            String correo = correoField.getText();
+            String direccion = direccionField.getText();
+            String localidad = localidadField.getText();
 
-        if (!validarDNI(dni)) {
-            JOptionPane.showMessageDialog(null, "El DNI debe tener exactamente 8 caracteres numéricos.");
-            return;
+            if (!validarDNI(dni)) {
+                JOptionPane.showMessageDialog(null, "El DNI debe tener exactamente 8 caracteres numéricos.");
+                return;
+            }
+
+            if (!validarCorreo(correo)) {
+                JOptionPane.showMessageDialog(null, "El correo electrónico debe tener un formato válido (ejemplo@dominio.com).");
+                return;
+            }
+
+            conex.insertarContacto(dni, nombre, apellido, correo, direccion, localidad, usuarioId);
         }
-
-        if (!validarCorreo(correo)) {
-            JOptionPane.showMessageDialog(null, "El correo electrónico debe tener un formato válido (ejemplo@dominio.com).");
-            return;
-        }
-
-        conex.insertarContacto(dni, nombre, apellido, correo, direccion, localidad, usuarioId);
     }
-}
 
-private void actualizarContacto(JTable tablaContactos, int selectedRow) {
-    DefaultTableModel model = (DefaultTableModel) tablaContactos.getModel();
-    int id = (int) model.getValueAt(selectedRow, 0);
-    String dni = (String) model.getValueAt(selectedRow, 1);
-    String nombre = (String) model.getValueAt(selectedRow, 2);
-    String apellido = (String) model.getValueAt(selectedRow, 3);
-    String correo = (String) model.getValueAt(selectedRow, 4);
-    String direccion = (String) model.getValueAt(selectedRow, 5);
-    String localidad = (String) model.getValueAt(selectedRow, 6);
+    private void actualizarContacto(JTable tablaContactos, int selectedRow) {
+        DefaultTableModel model = (DefaultTableModel) tablaContactos.getModel();
+        int id = (int) model.getValueAt(selectedRow, 0);
+        String dni = (String) model.getValueAt(selectedRow, 1);
+        String nombre = (String) model.getValueAt(selectedRow, 2);
+        String apellido = (String) model.getValueAt(selectedRow, 3);
+        String correo = (String) model.getValueAt(selectedRow, 4);
+        String direccion = (String) model.getValueAt(selectedRow, 5);
+        String localidad = (String) model.getValueAt(selectedRow, 6);
 
-    JTextField dniField = new JTextField(dni, 10);
-    JTextField nombreField = new JTextField(nombre, 10);
-    JTextField apellidoField = new JTextField(apellido, 10);
-    JTextField correoField = new JTextField(correo, 10);
-    JTextField direccionField = new JTextField(direccion, 10);
-    JTextField localidadField = new JTextField(localidad, 10);
+        JTextField dniField = new JTextField(dni, 10);
+        JTextField nombreField = new JTextField(nombre, 10);
+        JTextField apellidoField = new JTextField(apellido, 10);
+        JTextField correoField = new JTextField(correo, 10);
+        JTextField direccionField = new JTextField(direccion, 10);
+        JTextField localidadField = new JTextField(localidad, 10);
 
-    JPanel panel = new JPanel(new GridLayout(0, 2));
-    panel.add(new JLabel("DNI:"));
-    panel.add(dniField);
-    panel.add(new JLabel("Nombre:"));
-    panel.add(nombreField);
-    panel.add(new JLabel("Apellido:"));
-    panel.add(apellidoField);
-    panel.add(new JLabel("Correo Electrónico:"));
-    panel.add(correoField);
-    panel.add(new JLabel("Dirección:"));
-    panel.add(direccionField);
-    panel.add(new JLabel("Localidad:"));
-    panel.add(localidadField);
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        panel.add(new JLabel("DNI:"));
+        panel.add(dniField);
+        panel.add(new JLabel("Nombre:"));
+        panel.add(nombreField);
+        panel.add(new JLabel("Apellido:"));
+        panel.add(apellidoField);
+        panel.add(new JLabel("Correo Electrónico:"));
+        panel.add(correoField);
+        panel.add(new JLabel("Dirección:"));
+        panel.add(direccionField);
+        panel.add(new JLabel("Localidad:"));
+        panel.add(localidadField);
 
-    int result = JOptionPane.showConfirmDialog(null, panel, "Actualizar Contacto", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-    if (result == JOptionPane.OK_OPTION) {
-        dni = dniField.getText();
-        nombre = nombreField.getText();
-        apellido = apellidoField.getText();
-        correo = correoField.getText();
-        direccion = direccionField.getText();
-        localidad = localidadField.getText();
+        int result = JOptionPane.showConfirmDialog(null, panel, "Actualizar Contacto", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            dni = dniField.getText();
+            nombre = nombreField.getText();
+            apellido = apellidoField.getText();
+            correo = correoField.getText();
+            direccion = direccionField.getText();
+            localidad = localidadField.getText();
 
-        if (!validarDNI(dni)) {
-            JOptionPane.showMessageDialog(null, "El DNI debe tener exactamente 8 caracteres numéricos.");
-            return;
+            if (!validarDNI(dni)) {
+                JOptionPane.showMessageDialog(null, "El DNI debe tener exactamente 8 caracteres numéricos.");
+                return;
+            }
+
+            if (!validarCorreo(correo)) {
+                JOptionPane.showMessageDialog(null, "El correo electrónico debe tener un formato válido (ejemplo@dominio.com).");
+                return;
+            }
+
+            conex.actualizarContacto(id, dni, nombre, apellido, correo, direccion, localidad);
         }
-
-        if (!validarCorreo(correo)) {
-            JOptionPane.showMessageDialog(null, "El correo electrónico debe tener un formato válido (ejemplo@dominio.com).");
-            return;
-        }
-
-        conex.actualizarContacto(id, dni, nombre, apellido, correo, direccion, localidad);
     }
-}
 
-private boolean validarDNI(String dni) {
-    return dni.matches("\\d{8}");
-}
+    private boolean validarDNI(String dni) {
+        return dni.matches("\\d{8}");
+    }
 
-private boolean validarCorreo(String correo) {
-    return correo.matches("^[\\w-\\.]+@[\\w-\\.]+\\.[a-z]{2,3}$");
-}
-
+    private boolean validarCorreo(String correo) {
+        return correo.matches("^[\\w-\\.]+@[\\w-\\.]+\\.[a-z]{2,3}$");
+    }
 
     private void eliminarContacto(JTable tablaContactos, int selectedRow) {
         DefaultTableModel model = (DefaultTableModel) tablaContactos.getModel();
@@ -237,5 +239,3 @@ private boolean validarCorreo(String correo) {
         }
     }
 }
-
-

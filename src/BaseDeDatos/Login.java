@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package BaseDeDatos;
+
 import java.sql.*;
 import java.awt.Color;
 import java.awt.Font;
@@ -12,11 +13,13 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
-
+import javax.swing.UIManager;
+import org.mindrot.jbcrypt.BCrypt;
 public class Login extends JFrame {
 
     JPanel panel1;
@@ -99,10 +102,14 @@ public class Login extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String usuario = textArea1.getText();
                 String contraseña = textArea2.getText();
+                if (usuario.isEmpty() || contraseña.isEmpty()) {
+                    UIManager.put("OptionPane.messageForeground", Color.RED);
+                    JOptionPane.showMessageDialog(null, "Error: El usuario y la contraseña no pueden estar vacíos.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
                 conex.insertarDatos(usuario, contraseña);
             }
         };
-
         registrar.addActionListener(accion);
 
         ActionListener accionIngreso = new ActionListener() {
@@ -112,7 +119,9 @@ public class Login extends JFrame {
                 String contraseña = textArea2.getText();
 
                 if (usuario.isEmpty() || contraseña.isEmpty()) {
-                    System.out.println("El usuario y la contraseña no pueden estar vacíos.");
+                    UIManager.put("OptionPane.messageForeground", Color.RED);
+                    JOptionPane.showMessageDialog(null, "Error: El usuario y la contraseña no pueden estar vacíos.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 } else if (conex.validarCredenciales(usuario, contraseña)) {
                     int usuarioId = obtenerUsuarioId(usuario);  // Debes implementar este método
                     Contactos contactos = new Contactos(usuarioId);
@@ -141,6 +150,5 @@ public class Login extends JFrame {
         }
         return -1; // Indica que no se encontró el usuario
     }
-    
-    
+
 }
