@@ -10,16 +10,21 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-import org.mindrot.jbcrypt.BCrypt;
+
 public class Login extends JFrame {
 
     JPanel panel1;
@@ -28,7 +33,7 @@ public class Login extends JFrame {
     JLabel nombre;
     JLabel contraseña;
     JTextArea textArea1;
-    JTextArea textArea2;
+    JPasswordField textArea2;
     JButton registrar;
     JButton ingresar;
 
@@ -83,7 +88,7 @@ public class Login extends JFrame {
         textArea1.setBounds(110, 108, 150, 20);
         panel1.add(textArea1);
 
-        textArea2 = new JTextArea();
+        textArea2 = new JPasswordField();
         textArea2.setBounds(110, 168, 150, 20);
         panel1.add(textArea2);
 
@@ -101,12 +106,21 @@ public class Login extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String usuario = textArea1.getText();
-                String contraseña = textArea2.getText();
+                String contraseña = new String(textArea2.getPassword());
                 if (usuario.isEmpty() || contraseña.isEmpty()) {
                     UIManager.put("OptionPane.messageForeground", Color.RED);
                     JOptionPane.showMessageDialog(null, "Error: El usuario y la contraseña no pueden estar vacíos.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
+
+                String mensajeValidacion = validarPassword(contraseña);
+                if (!mensajeValidacion.equals("OK")) {
+                    UIManager.put("OptionPane.messageForeground", Color.RED);
+                    JOptionPane.showMessageDialog(null, mensajeValidacion, "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+            String hashedPassword = hashPassword(contraseña);
                 conex.insertarDatos(usuario, contraseña);
             }
         };
@@ -116,7 +130,7 @@ public class Login extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String usuario = textArea1.getText();
-                String contraseña = textArea2.getText();
+                String contraseña = new String(textArea2.getPassword());
 
                 if (usuario.isEmpty() || contraseña.isEmpty()) {
                     UIManager.put("OptionPane.messageForeground", Color.RED);
@@ -128,7 +142,7 @@ public class Login extends JFrame {
                     contactos.setVisible(true);
                     dispose();
                 } else {
-                    System.out.println("Credenciales incorrectas.");
+                    JOptionPane.showMessageDialog(null, "Credenciales incorrectas.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
@@ -136,6 +150,44 @@ public class Login extends JFrame {
         ingresar.addActionListener(accionIngreso);
     }
 
+    private String validarPassword(String password) {
+        if (password.length() < 12) {
+            return "La contraseña debe tener al menos 12 caracteres.";
+        }
+
+        String regexMayuscula = ".*[A-Z].*";
+        if (!Pattern.matches(regexMayuscula, password)) {
+            return "La contraseña debe contener al menos una letra mayúscula.";
+        }
+
+        String regexNumero = ".*[0-9].*";
+        if (!Pattern.matches(regexNumero, password)) {
+            return "La contraseña debe contener al menos un número.";
+        }
+
+        String regexEspecial = ".*[!@#$%^&*].*";
+        if (!Pattern.matches(regexEspecial, password)) {
+            return "La contraseña debe contener al menos un carácter especial.";
+        }
+
+        return "OK";
+    }
+
+    
+    private String hashPassword(String password) {
+    try {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] hash = md.digest(password.getBytes());
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hash) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    } catch (NoSuchAlgorithmException e) {
+        throw new RuntimeException(e);
+    }
+}
+    
     private int obtenerUsuarioId(String usuario) {
         try {
             String query = "SELECT id FROM registro WHERE usuario = ?";
