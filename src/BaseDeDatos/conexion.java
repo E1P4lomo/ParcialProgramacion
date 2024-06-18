@@ -2,6 +2,7 @@ package BaseDeDatos;
 
 import java.sql.*;
 import javax.swing.JOptionPane;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class conexion {
 
@@ -49,40 +50,42 @@ public class conexion {
     }
 
     // Validar las credenciales del usuario
-   public boolean validarCredenciales(String usuario, String password) {
-    try {
-        String query = "SELECT * FROM registro WHERE usuario = ? AND password = ?";
-        PreparedStatement ps = conectarDB().prepareStatement(query);
-        ps.setString(1, usuario);
-        ps.setString(2, password);
-        ResultSet rs = ps.executeQuery();
-        return rs.next();
-    } catch (SQLException ex) {
-        System.out.println("Error al validar usuario: " + ex.getMessage());
+    public boolean validarCredenciales(String usuario, String password) {
+        try {
+            String query = "SELECT password FROM registro WHERE usuario = ?";
+            PreparedStatement ps = conectarDB().prepareStatement(query);
+            ps.setString(1, usuario);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String hashContraseñaAlmacenada = rs.getString("password");
+                return BCrypt.checkpw(password, hashContraseñaAlmacenada);  // Comparar la contraseña ingresada con la encriptada
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error al validar usuario: " + ex.getMessage());
+        }
+        return false;
     }
-    return false;
-}
-
 
     // Insertar un nuevo usuario en la base de datos
-  public void insertarDatos(String usuario, String password) {
-    if (usuarioExiste(usuario)) {
-        JOptionPane.showMessageDialog(null, "El usuario ya existe. Por favor, elija otro nombre de usuario.", "Error", JOptionPane.ERROR_MESSAGE);
-        return; // No insertar si el usuario ya existe
-    }
+    public void insertarDatos(String usuario, String password) {
+        if (usuarioExiste(usuario)) {
+            JOptionPane.showMessageDialog(null, "El usuario ya existe. Por favor, elija otro nombre de usuario.", "Error", JOptionPane.ERROR_MESSAGE);
+            return; // No insertar si el usuario ya existe
+        }
 
-    // El usuario no existe, proceder con la inserción
-    try {
-        String query = "INSERT INTO registro (usuario, password) VALUES (?, ?)";
-        PreparedStatement ps = conectarDB().prepareStatement(query);
-        ps.setString(1, usuario);
-        ps.setString(2, password);
-        ps.executeUpdate();
-        JOptionPane.showMessageDialog(null, "Usuario registrado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-    } catch (SQLException ex) {
-        System.out.println("Error al insertar datos: " + ex.getMessage());
+        // El usuario no existe, proceder con la inserción
+        try {
+            String hashContraseña = BCrypt.hashpw(password, BCrypt.gensalt());  // Encriptar la contraseña
+            String query = "INSERT INTO registro (usuario, password) VALUES (?, ?)";
+            PreparedStatement ps = conectarDB().prepareStatement(query);
+            ps.setString(1, usuario);
+            ps.setString(2, hashContraseña);
+            ps.executeUpdate();
+            JOptionPane.showMessageDialog(null, "Usuario registrado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException ex) {
+            System.out.println("Error al insertar datos: " + ex.getMessage());
+        }
     }
-}
 
     public ResultSet obtenerDatosUsuario(int usuarioId) {
         try {
@@ -213,8 +216,7 @@ public class conexion {
         }
     }
 
-    // Actualizar datos de un usuario y sus datos personales
-    public void actualizarUsuario(int usuarioId, String usuario, String password, String dni, String nombre, String apellido, String correo, String direccion, String localidad) {
+ public void actualizarUsuario(int usuarioId, String usuario, String password, String dni, String nombre, String apellido, String correo, String direccion, String localidad) {
         try {
             // Actualizar los datos del usuario en la tabla "registro"
             String query = "UPDATE registro SET usuario = ?, password = ? WHERE id = ?";
@@ -224,8 +226,8 @@ public class conexion {
             ps.setInt(3, usuarioId);
             ps.executeUpdate();
 
-            // Actualizar los datos personales en la tabla "datos_personales"
-            query = "UPDATE registro SET dni = ?, nombre = ?, apellido = ?, correo_electronico = ?, direccion = ?, localidad = ? WHERE usuario_id = ?";
+            // Actualizar los datos personales en la tabla "registro"
+            query = "UPDATE registro SET dni = ?, nombre = ?, apellido = ?, correo = ?, direccion = ?, localidad = ? WHERE id = ?";
             ps = this.SQLconexion.prepareStatement(query);
             ps.setString(1, dni);
             ps.setString(2, nombre);
@@ -244,14 +246,12 @@ public class conexion {
         }
     }
 
-    // Obtener datos de un usuario
     // Actualizar la contraseña de un usuario
     public void actualizarContraseña(int usuarioId, String nuevaContraseña) {
         try {
-
             String query = "UPDATE registro SET password = ? WHERE id = ?";
             PreparedStatement ps = SQLconexion.prepareStatement(query);
-
+            ps.setString(1, nuevaContraseña);
             ps.setInt(2, usuarioId);
             int rowsAffected = ps.executeUpdate();
 
@@ -265,21 +265,51 @@ public class conexion {
         }
     }
 
-    // Cerrar la conexión con la base de datos
-    public void cerrarConexion() {
+    // Obtener el ID del usuario actual
+    public int obtenerUsuarioId(String usuario) {
         try {
-            if (SQLconexion != null) {
-                SQLconexion.close();
-                System.out.println("Conexión cerrada correctamente.");
+            String query = "SELECT id FROM registro WHERE usuario = ?";
+            PreparedStatement ps = SQLconexion.prepareStatement(query);
+            ps.setString(1, usuario);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
             }
         } catch (SQLException ex) {
-            System.out.println("Error al cerrar la conexión: " + ex.getMessage());
+            System.out.println("Error al obtener el ID del usuario: " + ex.getMessage());
         }
+        return -1; // Retorna -1 si no se encuentra el usuario
     }
 
-    // Método generado por IDE no soportado actualmente
-    void actualizarUsuario(int usuarioId, String dni, String nombre, String apellido, String correo, String direccion, String localidad) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose Tools | Templates.
+    // Obtener el nombre de usuario del usuario actual
+    public String obtenerNombreUsuario(int usuarioId) {
+        try {
+            String query = "SELECT usuario FROM registro WHERE id = ?";
+            PreparedStatement ps = SQLconexion.prepareStatement(query);
+            ps.setInt(1, usuarioId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("usuario");
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error al obtener el nombre de usuario: " + ex.getMessage());
+        }
+        return null;
     }
 
-}
+    // Obtener la contraseña del usuario actual
+    public String obtenerContraseñaUsuario(int usuarioId) {
+        try {
+            String query = "SELECT password FROM registro WHERE id = ?";
+            PreparedStatement ps = SQLconexion.prepareStatement(query);
+            ps.setInt(1, usuarioId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("password");
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error al obtener la contraseña del usuario: " + ex.getMessage());
+        }
+        return null;
+    }
+    }

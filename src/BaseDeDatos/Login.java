@@ -102,6 +102,7 @@ public class Login extends JFrame {
         registrar.setFont(new Font("arial", Font.BOLD, 12));
         panel1.add(registrar);
 
+        // Acción al presionar "Registrar"
         ActionListener accion = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -119,13 +120,13 @@ public class Login extends JFrame {
                     JOptionPane.showMessageDialog(null, mensajeValidacion, "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-
-            String hashedPassword = hashPassword(contraseña);
+                // Insertar el usuario en la base de datos
                 conex.insertarDatos(usuario, contraseña);
             }
         };
         registrar.addActionListener(accion);
 
+        // Acción al presionar "Ingresar"
         ActionListener accionIngreso = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -173,21 +174,20 @@ public class Login extends JFrame {
         return "OK";
     }
 
-    
     private String hashPassword(String password) {
-    try {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] hash = md.digest(password.getBytes());
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hash) {
-            sb.append(String.format("%02x", b));
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
-        return sb.toString();
-    } catch (NoSuchAlgorithmException e) {
-        throw new RuntimeException(e);
     }
-}
-    
+
     private int obtenerUsuarioId(String usuario) {
         try {
             String query = "SELECT id FROM registro WHERE usuario = ?";

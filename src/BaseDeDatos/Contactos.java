@@ -241,6 +241,8 @@ public class Contactos extends JFrame {
     }
 
     private void mostrarOpcionesAdministrador() {
+        
+        
         // Crear ventana de opciones del administrador
         JFrame ventanaAdmin = new JFrame("Opciones de Administrador");
         ventanaAdmin.setSize(400, 300);
@@ -292,34 +294,31 @@ public class Contactos extends JFrame {
         JButton btnEliminarUsuario = new JButton("Eliminar Usuario");
         JButton btnGuardarCambios = new JButton("Guardar Cambios");
         
-        
-        
-        
-       btnActualizar.addActionListener(new ActionListener() {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        // Lógica para actualizar los datos del usuario
-        String dni = txtDni.getText();
-        String nombre = txtNombre.getText();
-        String apellido = txtApellido.getText();
-        String correo = txtCorreo.getText();
-        String direccion = txtDireccion.getText();
-        String localidad = txtLocalidad.getText();
-        
-        // Verificar si alguna variable está vacía antes de llamar al método actualizarUsuario
-        if (!dni.isEmpty() && !nombre.isEmpty() && !apellido.isEmpty() && !correo.isEmpty() && !direccion.isEmpty() && !localidad.isEmpty()) {
-            try {
-                conex.actualizarUsuario(usuarioId, null, null, dni, nombre, apellido, correo, direccion, localidad);
-                JOptionPane.showMessageDialog(null, "Datos actualizados correctamente.");
-            } catch (Exception ex) {
-                System.out.println("Error al actualizar los datos del usuario: " + ex.getMessage());
+        btnActualizar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Lógica para actualizar los datos del usuario
+                String dni = txtDni.getText();
+                String nombre = txtNombre.getText();
+                String apellido = txtApellido.getText();
+                String correo = txtCorreo.getText();
+                String direccion = txtDireccion.getText();
+                String localidad = txtLocalidad.getText();
+
+                // Verificar si alguna variable está vacía antes de llamar al método actualizarUsuario
+                if (!dni.isEmpty() && !nombre.isEmpty() && !apellido.isEmpty() && !correo.isEmpty() && !direccion.isEmpty() && !localidad.isEmpty()) {
+                    try {
+                        conex.actualizarUsuario(usuarioId, null, null, dni, nombre, apellido, correo, direccion, localidad);
+                        JOptionPane.showMessageDialog(null, "Datos actualizados correctamente.");
+                    } catch (Exception ex) {
+                        System.out.println("Error al actualizar los datos del usuario: " + ex.getMessage());
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Error: Todos los campos son obligatorios. No se puede actualizar.");
+                    System.out.println("Error: Todos los campos son obligatorios. No se puede actualizar.");
+                }
             }
-        } else {
-            JOptionPane.showMessageDialog(null, "Error: Todos los campos son obligatorios. No se puede actualizar.");
-            System.out.println("Error: Todos los campos son obligatorios. No se puede actualizar.");
-        }
-    }
-});
+        });
         btnCambiarUsuario.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -362,7 +361,5 @@ public class Contactos extends JFrame {
         // Mostrar ventana de administrador
         ventanaAdmin.setVisible(true);
     }
-
-
 
 }

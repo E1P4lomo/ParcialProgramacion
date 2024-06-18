@@ -1,8 +1,6 @@
-
 package BaseDeDatos;
 
 import javax.swing.SwingUtilities;
-
 
 public class BD {
 
