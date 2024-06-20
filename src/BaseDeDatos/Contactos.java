@@ -9,6 +9,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.table.DefaultTableModel;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.event.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import javax.swing.table.DefaultTableModel;
+import java.util.regex.Pattern;  // Asegúrate de importar esta librería
+
 public class Contactos extends JFrame {
 
     private conexion conex;
@@ -241,125 +251,122 @@ public class Contactos extends JFrame {
     }
 
     private void mostrarOpcionesAdministrador() {
-        
-        
-        // Crear ventana de opciones del administrador
-        JFrame ventanaAdmin = new JFrame("Opciones de Administrador");
-        ventanaAdmin.setSize(400, 300);
-        ventanaAdmin.setLocationRelativeTo(this);
-        ventanaAdmin.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        JFrame frame = new JFrame("Opciones de Administrador");
+        frame.setSize(400, 300);
+        frame.setLocationRelativeTo(null);
+        frame.setLayout(new BorderLayout());
 
-        // Crear panel para los campos de usuario
-        JPanel panelUsuario = new JPanel(new GridLayout(0, 2));
-        JLabel lblUsuario = new JLabel("Usuario:");
-        JTextField txtUsuario = new JTextField(10);
-        JLabel lblContrasena = new JLabel("Contraseña:");
-        JTextField txtContrasena = new JTextField(10);
-        JLabel lblDni = new JLabel("DNI:");
-        JTextField txtDni = new JTextField(10);
-        JLabel lblNombre = new JLabel("Nombre:");
-        JTextField txtNombre = new JTextField(10);
-        JLabel lblApellido = new JLabel("Apellido:");
-        JTextField txtApellido = new JTextField(10);
-        JLabel lblCorreo = new JLabel("Correo Electrónico:");
-        JTextField txtCorreo = new JTextField(10);
-        JLabel lblDireccion = new JLabel("Dirección:");
-        JTextField txtDireccion = new JTextField(10);
-        JLabel lblLocalidad = new JLabel("Localidad:");
-        JTextField txtLocalidad = new JTextField(10);
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        frame.add(panel, BorderLayout.CENTER);
 
-        // Agregar más campos según la estructura de tu usuario
-        // Agregar campos al panel
-        panelUsuario.add(lblUsuario);
-        panelUsuario.add(txtUsuario);
-        panelUsuario.add(lblContrasena);
-        panelUsuario.add(txtContrasena);
-        panelUsuario.add(lblDni);
-        panelUsuario.add(txtDni);
-        panelUsuario.add(lblNombre);
-        panelUsuario.add(txtNombre);
-        panelUsuario.add(lblApellido);
-        panelUsuario.add(txtApellido);
-        panelUsuario.add(lblCorreo);
-        panelUsuario.add(txtCorreo);
-        panelUsuario.add(lblDireccion);
-        panelUsuario.add(txtDireccion);
-        panelUsuario.add(lblLocalidad);
-        panelUsuario.add(txtLocalidad);
-        // Agregar más campos al panel según sea necesario
+        JTextField usuarioField = new JTextField(10);
+        JPasswordField contraseñaField = new JPasswordField(10);
+        JTextField dniField = new JTextField(10);
+        JTextField nombreField = new JTextField(10);
+        JTextField apellidoField = new JTextField(10);
+        JTextField correoField = new JTextField(10);
+        JTextField direccionField = new JTextField(10);
+        JTextField localidadField = new JTextField(10);
 
-        // Botones de acción
-        JButton btnActualizar = new JButton("Actualizar Datos");
-        JButton btnCambiarUsuario = new JButton("Cambiar Usuario/Contraseña");
-        JButton btnEliminarUsuario = new JButton("Eliminar Usuario");
-        JButton btnGuardarCambios = new JButton("Guardar Cambios");
-        
-        btnActualizar.addActionListener(new ActionListener() {
+        panel.add(new JLabel("Usuario:"));
+        panel.add(usuarioField);
+        panel.add(new JLabel("Contraseña:"));
+        panel.add(contraseñaField);
+        panel.add(new JLabel("DNI:"));
+        panel.add(dniField);
+        panel.add(new JLabel("Nombre:"));
+        panel.add(nombreField);
+        panel.add(new JLabel("Apellido:"));
+        panel.add(apellidoField);
+        panel.add(new JLabel("Correo Electrónico:"));
+        panel.add(correoField);
+        panel.add(new JLabel("Dirección:"));
+        panel.add(direccionField);
+        panel.add(new JLabel("Localidad:"));
+        panel.add(localidadField);
+
+        JButton actualizarBtn = new JButton("Actualizar");
+        JButton eliminarBtn = new JButton("Eliminar");
+        JButton salirBtn = new JButton("Salir");
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(actualizarBtn);
+        buttonPanel.add(eliminarBtn);
+        buttonPanel.add(salirBtn);
+
+        frame.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Cargar los datos del usuario
+        cargarDatosUsuario(usuarioField, contraseñaField, dniField, nombreField, apellidoField, correoField, direccionField, localidadField);
+
+        // Actualizar usuario
+        actualizarBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Lógica para actualizar los datos del usuario
-                String dni = txtDni.getText();
-                String nombre = txtNombre.getText();
-                String apellido = txtApellido.getText();
-                String correo = txtCorreo.getText();
-                String direccion = txtDireccion.getText();
-                String localidad = txtLocalidad.getText();
+                String usuario = usuarioField.getText();
+                String contraseña = new String(contraseñaField.getPassword());
+                String dni = dniField.getText();
+                String nombre = nombreField.getText();
+                String apellido = apellidoField.getText();
+                String correo = correoField.getText();
+                String direccion = direccionField.getText();
+                String localidad = localidadField.getText();
 
-                // Verificar si alguna variable está vacía antes de llamar al método actualizarUsuario
-                if (!dni.isEmpty() && !nombre.isEmpty() && !apellido.isEmpty() && !correo.isEmpty() && !direccion.isEmpty() && !localidad.isEmpty()) {
-                    try {
-                        conex.actualizarUsuario(usuarioId, null, null, dni, nombre, apellido, correo, direccion, localidad);
-                        JOptionPane.showMessageDialog(null, "Datos actualizados correctamente.");
-                    } catch (Exception ex) {
-                        System.out.println("Error al actualizar los datos del usuario: " + ex.getMessage());
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(null, "Error: Todos los campos son obligatorios. No se puede actualizar.");
-                    System.out.println("Error: Todos los campos son obligatorios. No se puede actualizar.");
-                }
-            }
-        });
-        btnCambiarUsuario.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Lógica para cambiar usuario y contraseña
-                // Implementar la ventana para cambiar usuario y contraseña
+                conex.actualizarUsuario(usuarioId, usuario, contraseña, dni, nombre, apellido, correo, direccion, localidad);
             }
         });
 
-        btnEliminarUsuario.addActionListener(new ActionListener() {
+        // Eliminar usuario
+        eliminarBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Lógica para eliminar usuario
-                int confirmacion = JOptionPane.showConfirmDialog(null, "¿Está seguro de que desea eliminar su cuenta?", "Confirmación", JOptionPane.YES_NO_OPTION);
-                if (confirmacion == JOptionPane.YES_OPTION) {
-                    // Implementar la eliminación del usuario de la base de datos
+                int confirm = JOptionPane.showConfirmDialog(null, "¿Está seguro de que desea eliminar este usuario?", "Eliminar Usuario", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
                     conex.eliminarUsuario(usuarioId);
-                    // Cerrar la ventana de opciones del administrador
-                    ventanaAdmin.dispose();
-                    // Cerrar la ventana de contactos
+                    frame.dispose();
                     dispose();
-                    // Implementar la redirección a la ventana de login u otra acción apropiada
+                    new Login().setVisible(true);
                 }
             }
         });
 
-        // Crear panel para los botones de acción
-        JPanel panelBotones = new JPanel(new GridLayout(0, 1));
-        panelBotones.add(btnActualizar);
-        panelBotones.add(btnCambiarUsuario);
-        panelBotones.add(btnEliminarUsuario);
+        // Salir y volver al login
+        salirBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                dispose();
+                new Login().setVisible(true);
+            }
+        });
 
-        // Crear panel principal para la ventana de administrador
-        JPanel panelAdmin = new JPanel(new BorderLayout());
-        panelAdmin.add(panelUsuario, BorderLayout.CENTER);
-        panelAdmin.add(panelBotones, BorderLayout.SOUTH);
-
-        // Agregar panel principal a la ventana de administrador
-        ventanaAdmin.add(panelAdmin);
-
-        // Mostrar ventana de administrador
-        ventanaAdmin.setVisible(true);
+        frame.setVisible(true);
     }
 
+    private void cargarDatosUsuario(JTextField usuarioField, JPasswordField contraseñaField, JTextField dniField, JTextField nombreField, JTextField apellidoField, JTextField correoField, JTextField direccionField, JTextField localidadField) {
+        ResultSet rs = conex.obtenerDatosUsuario(usuarioId);
+        try {
+            if (rs.next()) {
+                usuarioField.setText(rs.getString("usuario"));
+                contraseñaField.setText(rs.getString("contraseña"));
+                dniField.setText(rs.getString("dni"));
+                nombreField.setText(rs.getString("nombre"));
+                apellidoField.setText(rs.getString("apellido"));
+                correoField.setText(rs.getString("correo_electronico"));
+                direccionField.setText(rs.getString("direccion"));
+                localidadField.setText(rs.getString("localidad"));
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error al cargar los datos del usuario: " + ex.getMessage());
+        }
+    }
+
+   
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new Contactos(1).setVisible(true); // Cambia '1' por el ID de usuario que desees probar
+            }
+        });
+    }
 }
