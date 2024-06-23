@@ -98,7 +98,21 @@ public class conexion {
             return null;
         }
     }
-
+    
+    public String obtenerNombreUsuario(int usuarioId) {
+    try {
+        String query = "SELECT usuario FROM registro WHERE id = ?";
+        PreparedStatement ps = SQLconexion.prepareStatement(query);
+        ps.setInt(1, usuarioId);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            return rs.getString("usuario");
+        }
+    } catch (SQLException ex) {
+        System.out.println("Error al obtener el nombre de usuario: " + ex.getMessage());
+    }
+    return null;
+}
     public void actualizarDatosUsuario(int usuarioId, String dni, String nombre, String apellido, String correo, String direccion, String localidad) {
         try {
             String query = "UPDATE registro SET dni = ?, nombre = ?, apellido = ?, correo = ?, direccion = ?, localidad = ? WHERE id = ?";
@@ -216,35 +230,51 @@ public class conexion {
         }
     }
 
- public void actualizarUsuario(int usuarioId, String usuario, String password, String dni, String nombre, String apellido, String correo, String direccion, String localidad) {
-        try {
-            // Actualizar los datos del usuario en la tabla "registro"
-            String query = "UPDATE registro SET usuario = ?, password = ? WHERE id = ?";
-            PreparedStatement ps = this.SQLconexion.prepareStatement(query);
+  public void actualizarUsuario(int usuarioId, String usuario, String contraseña, String dni, String nombre, String apellido, String correo, String direccion, String localidad) {
+    try {
+        // Verificar si el nuevo nombre de usuario ya existe
+        if ((!usuarioExiste(usuario) || obtenerNombreUsuario(usuarioId).equals(usuario))) {
+            String query;
+            if (!contraseña.isEmpty()) {
+                query = "UPDATE registro SET usuario = ?, password = ?, dni = ?, nombre = ?, apellido = ?, correo = ?, direccion = ?, localidad = ? WHERE id = ?";
+            } else {
+                query = "UPDATE registro SET usuario = ?, dni = ?, nombre = ?, apellido = ?, correo = ?, direccion = ?, localidad = ? WHERE id = ?";
+            }
+            PreparedStatement ps = conectarDB().prepareStatement(query);
             ps.setString(1, usuario);
-            ps.setString(2, password);
-            ps.setInt(3, usuarioId);
-            ps.executeUpdate();
-
-            // Actualizar los datos personales en la tabla "registro"
-            query = "UPDATE registro SET dni = ?, nombre = ?, apellido = ?, correo = ?, direccion = ?, localidad = ? WHERE id = ?";
-            ps = this.SQLconexion.prepareStatement(query);
-            ps.setString(1, dni);
-            ps.setString(2, nombre);
-            ps.setString(3, apellido);
-            ps.setString(4, correo);
-            ps.setString(5, direccion);
-            ps.setString(6, localidad);
-            ps.setInt(7, usuarioId);
-            ps.executeUpdate();
-
-            // Mostrar un mensaje de éxito
-            JOptionPane.showMessageDialog(null, "Datos actualizados correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-        } catch (SQLException ex) {
-            // Mostrar un mensaje de error si ocurre una excepción SQL
-            JOptionPane.showMessageDialog(null, "Error al actualizar los datos: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            if (!contraseña.isEmpty()) {
+                ps.setString(2, contraseña);
+                ps.setString(3, dni);
+                ps.setString(4, nombre);
+                ps.setString(5, apellido);
+                ps.setString(6, correo);
+                ps.setString(7, direccion);
+                ps.setString(8, localidad);
+                ps.setInt(9, usuarioId);
+            } else {
+                ps.setString(2, dni);
+                ps.setString(3, nombre);
+                ps.setString(4, apellido);
+                ps.setString(5, correo);
+                ps.setString(6, direccion);
+                ps.setString(7, localidad);
+                ps.setInt(8, usuarioId);
+            }
+            int rowsAffected = ps.executeUpdate();
+            // Mostrar mensaje dependiendo del resultado de la actualización
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(null, "Usuario actualizado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "No se pudo actualizar el usuario.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "El usuario ya existe. Por favor, elija otro nombre de usuario.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+    } catch (SQLException ex) {
+        System.out.println("Error al actualizar usuario: " + ex.getMessage());
     }
+}
+
 
     // Actualizar la contraseña de un usuario
     public void actualizarContraseña(int usuarioId, String nuevaContraseña) {
@@ -280,36 +310,18 @@ public class conexion {
         }
         return -1; // Retorna -1 si no se encuentra el usuario
     }
+ 
+    public ResultSet obtenerDatosUsuario(String usuario) {
+    ResultSet rs = null;
+    try {
+        String query = "SELECT * FROM registro WHERE usuario = ?";
+        PreparedStatement ps = conectarDB().prepareStatement(query);
+        ps.setString(1, usuario);
+        rs = ps.executeQuery();
+    } catch (SQLException ex) {
+        System.out.println("Error al obtener los datos del usuario: " + ex.getMessage());
+    }
+    return rs;
+}
 
-    // Obtener el nombre de usuario del usuario actual
-    public String obtenerNombreUsuario(int usuarioId) {
-        try {
-            String query = "SELECT usuario FROM registro WHERE id = ?";
-            PreparedStatement ps = SQLconexion.prepareStatement(query);
-            ps.setInt(1, usuarioId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getString("usuario");
-            }
-        } catch (SQLException ex) {
-            System.out.println("Error al obtener el nombre de usuario: " + ex.getMessage());
-        }
-        return null;
-    }
-
-    // Obtener la contraseña del usuario actual
-    public String obtenerContraseñaUsuario(int usuarioId) {
-        try {
-            String query = "SELECT password FROM registro WHERE id = ?";
-            PreparedStatement ps = SQLconexion.prepareStatement(query);
-            ps.setInt(1, usuarioId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getString("password");
-            }
-        } catch (SQLException ex) {
-            System.out.println("Error al obtener la contraseña del usuario: " + ex.getMessage());
-        }
-        return null;
-    }
-    }
+}

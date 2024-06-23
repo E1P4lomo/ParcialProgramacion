@@ -1,23 +1,14 @@
 package BaseDeDatos;
 
+import javax.swing.*;
+import java.awt.event.*;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import javax.swing.*;
-import java.awt.event.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.table.DefaultTableModel;
-
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import javax.swing.*;
-import java.awt.event.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import javax.swing.table.DefaultTableModel;
-import java.util.regex.Pattern;  // Asegúrate de importar esta librería
+import org.mindrot.jbcrypt.BCrypt;
 
 public class Contactos extends JFrame {
 
@@ -312,7 +303,19 @@ public class Contactos extends JFrame {
                 String direccion = direccionField.getText();
                 String localidad = localidadField.getText();
 
-                conex.actualizarUsuario(usuarioId, usuario, contraseña, dni, nombre, apellido, correo, direccion, localidad);
+                // Validar campos antes de actualizar
+                if (!validarDNI(dni) || !validarCorreo(correo)) {
+                    return;
+                }
+
+                // Si la contraseña no está vacía, hashearla antes de actualizar
+                if (!contraseña.isEmpty()) {
+                    String hashContraseña = BCrypt.hashpw(contraseña, BCrypt.gensalt());
+                    conex.actualizarUsuario(usuarioId, usuario, hashContraseña, dni, nombre, apellido, correo, direccion, localidad);
+                } else {
+
+                    conex.actualizarUsuario(usuarioId, usuario, contraseña, dni, nombre, apellido, correo, direccion, localidad);
+                }
             }
         });
 
@@ -348,11 +351,11 @@ public class Contactos extends JFrame {
         try {
             if (rs.next()) {
                 usuarioField.setText(rs.getString("usuario"));
-                contraseñaField.setText(rs.getString("contraseña"));
+                contraseñaField.setText(rs.getString("password"));
                 dniField.setText(rs.getString("dni"));
                 nombreField.setText(rs.getString("nombre"));
                 apellidoField.setText(rs.getString("apellido"));
-                correoField.setText(rs.getString("correo_electronico"));
+                correoField.setText(rs.getString("correo"));
                 direccionField.setText(rs.getString("direccion"));
                 localidadField.setText(rs.getString("localidad"));
             }
@@ -361,7 +364,6 @@ public class Contactos extends JFrame {
         }
     }
 
-   
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
